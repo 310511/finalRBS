@@ -22,12 +22,21 @@ const PaymentSuccess = () => {
   useEffect(() => {
     const verifyPaymentAndConfirmBooking = async () => {
       // Check if this is a "Pay Later" booking FIRST
+      // Check both query params and hash fragment
       const payLaterParam = searchParams.get('pay_later');
       const bookingRef = searchParams.get('booking_ref');
+      const currentUrl = window.location.href;
+      const hasPayLaterInUrl = currentUrl.includes('pay_later=true') || currentUrl.includes('pay_later=1');
       
-      if (payLaterParam === 'true' || payLaterParam === '1') {
+      console.log('🔍 Checking for pay later booking...');
+      console.log('  - payLaterParam from searchParams:', payLaterParam);
+      console.log('  - bookingRef from searchParams:', bookingRef);
+      console.log('  - Current URL:', currentUrl);
+      console.log('  - Has pay_later in URL:', hasPayLaterInUrl);
+      
+      if (payLaterParam === 'true' || payLaterParam === '1' || hasPayLaterInUrl) {
         // This is a Pay Later booking - booking is already confirmed
-        console.log('💰 Pay Later booking - booking already confirmed');
+        console.log('💰 Pay Later booking detected - booking already confirmed');
         console.log('🔍 Booking reference from URL:', bookingRef);
         setIsPayLater(true);
         
@@ -58,6 +67,17 @@ const PaymentSuccess = () => {
               // Create a minimal confirmation object
               foundConfirmation = {
                 bookingReferenceId: bookingRef,
+                confirmationNumber: 'N/A',
+                bookingId: 'N/A',
+                clientReferenceId: 'N/A',
+                paymentStatus: 'Pending'
+              };
+              setConfirmationData(foundConfirmation);
+            } else {
+              // Even without booking_ref, if pay_later is true, booking was confirmed
+              console.log('✅ Pay later booking confirmed (no booking ref needed)');
+              foundConfirmation = {
+                bookingReferenceId: 'N/A',
                 confirmationNumber: 'N/A',
                 bookingId: 'N/A',
                 clientReferenceId: 'N/A',
@@ -312,7 +332,7 @@ const PaymentSuccess = () => {
             <div className="text-center">
               <p className={`text-lg ${isPayLater ? 'text-blue-800' : 'text-green-800'}`}>
                 {isPayLater 
-                  ? 'Your booking has been confirmed! Payment is pending and can be completed later.'
+                  ? 'Payment is yet to be done and booking is placed. Your booking has been confirmed successfully!'
                   : 'Thank you for your payment. Your booking is now confirmed!'
                 }
               </p>
@@ -428,7 +448,7 @@ const PaymentSuccess = () => {
 
             <div className="text-center text-sm text-muted-foreground">
               {isPayLater ? (
-                <p>Your booking confirmation details have been saved. You can complete payment later from your bookings page.</p>
+                <p>Your booking has been placed successfully. Payment is pending and can be completed later from your bookings page.</p>
               ) : (
                 <p>A confirmation email has been sent to your registered email address.</p>
               )}
